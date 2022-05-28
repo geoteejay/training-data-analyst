@@ -1,0 +1,370 @@
+Perform Foundational Data, ML, and AI Tasks in Google Cloud: Challenge Lab
+
+
+------------------------------------------------------
+Vertex AI Platform
+-----------------------------------------------------
+- Launch Vertex AI Platform Notebooks
+    In the Customize instance menu, select TensorFlow Enterprise and choose the 
+    latest version of TensorFlow Enterprise 2.x (with LTS) > Without GPUs.
+
+
+- Clone the example repo within your Vertex AI Platform Notebooks instance
+    git clone https://github.com/GoogleCloudPlatform/training-data-analyst
+
+
+- Navigate to the example notebook
+    training-data-analyst/self-paced-labs/ai-platform-qwikstart and open ai_platform_qwik_start.ipynb
+
+
+- Run your training job in the cloud
+
+
+
+----------------------------------------------------
+Dataprep: Qwik Start
+----------------------------------------------------
+- Create a Cloud Storage bucket in your project
+
+
+- Initialize Cloud Dataprep
+
+
+- Create a flow
+    Click Flows icon, then the Create button, then select Blank Flow
+
+- Import datasets
+    Click Add Datasets, then select the Import Datasets link
+
+
+- Prep the candidate file
+
+    Rename columns
+        rename type: manual mapping: [column24,'Candidate_Name'], 
+        [column2,'Candidate_ID'],[column8,'Party_Affiliation'], 
+        [sum_column16,'Total_Contribution_Sum'], 
+        [average_column16,'Average_Contribution_Sum'], 
+        [countif,'Number_of_Contributions']
+
+
+-----------------------------------------------------
+Dataflow: Qwik Start - Templates
+-----------------------------------------------------
+- Activate Cloud Shell
+    gcloud auth list
+    gcloud config list project
+
+- Check project permissions
+    Confirm that the default compute Service Account 
+    {project-number}-compute@developer.gserviceaccount.com is present and has the editor role assigned
+
+
+- Ensure that the Dataflow API is successfully enabled
+
+
+- Create a Cloud BigQuery Dataset and Table Using Cloud Shell
+    Run the following command to create a dataset called taxirides:
+        bq mk taxirides
+
+    Now that you have your dataset created, you'll use it in the following step to instantiate a BigQuery table. Run the following command to do so:
+
+        bq mk \
+        --time_partitioning_field timestamp \
+        --schema ride_id:string,point_idx:integer,latitude:float,longitude:float,\
+        timestamp:timestamp,meter_reading:float,meter_increment:float,ride_status:string,\
+        passenger_count:integer -t taxirides.realtime
+
+- Create a storage bucket
+    export BUCKET_NAME=<your-unique-name>
+
+    gsutil mb gs://$BUCKET_NAME/
+
+
+- Run the Pipeline
+    From the Navigation menu, find the Analytics section and click on Dataflow.
+    Click on + Create job from template at the top of the screen.
+    Enter iotflow as Job name for your Cloud Dataflow job.
+    Under Dataflow Template, select the Pub/Sub Topic to BigQuery template.
+    Under Input Pub/Sub topic, enter:
+        projects/pubsub-public-data/topics/taxirides-realtime
+    Under BigQuery output table, enter the name of the table that was created:
+        <myprojectid>:taxirides.realtime
+    Add your bucket as Temporary Location:
+        gs://Your_Bucket_Name/temp
+
+
+---------------------------------------------------------
+Dataflow: Qwik Start - Python
+---------------------------------------------------------
+- Activate Cloud Shell
+    gcloud auth list
+    gcloud config list project
+
+
+- Create a Cloud Storage bucket
+
+
+- Install pip and the Cloud Dataflow SDK
+    docker run -it -e DEVSHELL_PROJECT_ID=$DEVSHELL_PROJECT_ID python:3.7 /bin/bash
+
+    pip install apache-beam[gcp]
+
+- Run the wordcount.py example locally by running the following command:
+    python -m apache_beam.examples.wordcount --output OUTPUT_FILE
+
+
+- Run an Example Pipeline Remotely
+    Set the BUCKET environment variable to the bucket you created earlier
+        BUCKET=gs://<bucket name provided earlier>
+    Now you'll run the wordcount.py example remotely
+        python -m apache_beam.examples.wordcount --project $DEVSHELL_PROJECT_ID \
+        --runner DataflowRunner \
+        --staging_location $BUCKET/staging \
+        --temp_location $BUCKET/temp \
+        --output $BUCKET/results/output \
+        --region us-central1
+
+
+----------------------------------------------
+Dataproc: Qwik Start - Command Line
+----------------------------------------------
+- Activate Cloud Shell
+    gcloud auth list
+    gcloud config list project
+
+- Create a cluster
+    gcloud config set dataproc/region us-central1
+
+    gcloud dataproc clusters create example-cluster --worker-boot-disk-size 500
+
+- Submit a job
+    gcloud dataproc jobs submit spark --cluster example-cluster \
+    --class org.apache.spark.examples.SparkPi \
+    --jars file:///usr/lib/spark/examples/jars/spark-examples.jar -- 1000
+
+
+
+- Update a cluster
+    gcloud dataproc clusters update example-cluster --num-workers 4
+
+
+
+---------------------------------------------------
+Cloud Natural Language API: Qwik Start
+---------------------------------------------------
+- Activate Cloud Shell
+    gcloud auth list
+    gcloud config list project
+
+- Create an API Key
+    First, you will set an environment variable with your PROJECT_ID which you will use throughout this codelab:
+        export GOOGLE_CLOUD_PROJECT=$(gcloud config get-value core/project)
+
+    Next, create a new service account to access the Natural Language API:
+        gcloud iam service-accounts create my-natlang-sa \
+        --display-name "my natural language service account"
+
+    Then, create credentials to log in as your new service account. 
+    Create these credentials and save it as a JSON file "~/key.json" by using the following command:
+        gcloud iam service-accounts keys create ~/key.json \
+        --iam-account my-natlang-sa@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com
+
+    set the GOOGLE_APPLICATION_CREDENTIALS environment variable.
+        export GOOGLE_APPLICATION_CREDENTIALS="/home/USER/key.json"
+
+
+- Make an Entity Analysis Request
+    gcloud ml language analyze-entities --content="Michelangelo Caravaggio, Italian painter, is known for 'The Calling of Saint Matthew'." > result.json
+
+    cat result.json
+
+
+------------------------------------------------
+Google Cloud Speech API: Qwik Start
+------------------------------------------------
+- Activate Cloud Shell
+    gcloud auth list
+    gcloud config list project
+
+- Create an API Key
+    export API_KEY=<YOUR_API_KEY>
+
+
+- Create your Speech API request
+    Create request.json
+        touch request.json
+        nano request.json
+
+            {
+            "config": {
+                "encoding":"FLAC",
+                "languageCode": "en-US"
+            },
+            "audio": {
+                "uri":"gs://cloud-samples-tests/speech/brooklyn.flac"
+            }
+            }
+- Call the Speech API
+    curl -s -X POST -H "Content-Type: application/json" --data-binary @request.json \
+    "https://speech.googleapis.com/v1/speech:recognize?key=${API_KEY}"
+
+
+    curl -s -X POST -H "Content-Type: application/json" --data-binary @request.json \
+    "https://speech.googleapis.com/v1/speech:recognize?key=${API_KEY}" > result.json
+
+
+
+---------------------------------------------------------
+Video Intelligence: Qwik Start
+---------------------------------------------------------
+- Activate Cloud Shell
+    gcloud auth list
+    gcloud config list project
+
+
+- Enable the Video Intelligence API
+
+
+- Set up authorization
+    create a new service account named quickstart
+        gcloud iam service-accounts create quickstart
+    Create a service account key file replacing <your-project-123> with your Qwiklabs Project ID:
+        gcloud iam service-accounts keys create key.json --iam-account quickstart@<your-project-123>.iam.gserviceaccount.com
+
+     authenticate your service account
+        gcloud auth activate-service-account --key-file key.json
+
+        gcloud auth print-access-token
+
+
+- Make an annotate video request
+    cat > request.json <<EOF
+        {
+        "inputUri":"gs://spls/gsp154/video/train.mp4",
+        "features": [
+            "LABEL_DETECTION"
+        ]
+        }
+        EOF
+
+
+- Use curl to make a videos:annotate request passing the filename of the entity request
+    curl -s -H 'Content-Type: application/json' \
+    -H 'Authorization: Bearer '$(gcloud auth print-access-token)'' \
+    'https://videointelligence.googleapis.com/v1/videos:annotate' \
+    -d @request.json
+
+
+
+-  Replace the PROJECTS, LOCATIONS and OPERATION_NAME with the value you just received in the previous command:
+
+    curl -s -H 'Content-Type: application/json' \
+    -H 'Authorization: Bearer '$(gcloud auth print-access-token)'' \
+    'https://videointelligence.googleapis.com/v1/projects/PROJECTS/locations/LOCATIONS/operations/OPERATION_NAME'
+
+    
+
+
+
+--------------------------------------------------------------------------
+Perform Foundational Data, ML, and AI Tasks in Google Cloud: Challenge Lab
+---------------------------------------------------------------------------
+
+Task 1 : Run a simple Dataflow job
+
+    - Activate Cloud Shell
+        gcloud auth list
+        gcloud config list project
+
+    - Create a storage bucket
+        export BUCKET_NAME=<your-unique-name>
+
+        gsutil mb gs://$BUCKET_NAME/
+
+    - Create a BigQuery dataset
+        bq mk GSP323
+
+    - Dataflow batch template Text Files on Cloud Storage to BigQuery under "Process Data in Bulk (batch)" to transfer data from a Cloud Storage bucket (gs://cloud-training/gsp323/lab.csv)
+
+
+Task 2: Run a simple Dataproc job
+    - log into one of the cluster nodes and copy the /data.txt file into hdfs
+        hdfs dfs -cp gs://cloud-training/gsp323/data.txt /data.txt
+
+    - Activate Cloud Shell
+        gcloud auth list
+        gcloud config list project
+
+    - Create a cluster
+        gcloud config set dataproc/region us-central1
+
+        gcloud dataproc clusters create example-cluster --worker-boot-disk-size 500
+
+
+    - Submit a job
+        gcloud dataproc jobs submit spark --cluster example-cluster \
+        --class org.apache.spark.examples.SparkPageRank  --region us-central1  --max-failures-per-hour 1 \
+        --jars file:///usr/lib/spark/examples/jars/spark-examples.jar  data.txt 
+
+
+Task 3: Run a simple Dataprep job
+    - Create a Cloud Storage bucket in your project
+
+
+- Initialize Cloud Dataprep
+
+
+- Create a flow
+    Click Flows icon, then the Create button, then select Blank Flow
+
+    - Import datasets
+        Click Add Datasets, then select the Import Datasets link
+
+
+    - Prep the candidate file
+
+        Rename columns
+            rename type: manual mapping: [column2,'runid'], 
+            [column3,'userid'],[column4,'labid'], 
+            [column5,'lab_title'], 
+            [column6,'start'], 
+            [column7,'end'],
+            [column8,'time'],
+            [column9,'score'],
+            [column10,'state']
+
+
+
+- Task 4: AI
+    - Activate Cloud Shell
+        gcloud auth list
+        gcloud config list project
+
+    - Create an API Key
+        export API_KEY=<YOUR_API_KEY>
+
+
+    - Create your Speech API request
+        Create request.json
+
+            touch request.json
+            nano request.json
+
+                {
+                "config": {
+                    "encoding":"FLAC",
+                    "languageCode": "en-US"
+                },
+                "audio": {
+                    "uri":"gs://cloud-training/gsp323/task4.flac"
+                }
+                }
+
+
+        curl -s -X POST -H "Content-Type: application/json" --data-binary @request.json \
+        "https://speech.googleapis.com/v1/speech:recognize?key=${API_KEY}" > result.json
+
+
+    - copy result to Cloud Speech Location 
+
+
